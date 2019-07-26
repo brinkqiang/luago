@@ -24,32 +24,54 @@
 
 namespace lua_module_luago
 {
-    static sol::table require_api(sol::this_state L)
-    {
-        sol::state_view lua(L);
-        sol::table module = lua.create_table();
+static sol::table require_api(sol::this_state L)
+{
+    sol::state_view lua(L);
+    sol::table module = lua.create_table();
 
-        module.set_function("run", [](sol::object obj, sol::this_state L) {
-            if (obj.get_type() != sol::type::function) {
-                return;
-            }
-            auto function = obj.as<sol::protected_function>();
-            auto result   = function.call();
-            if (!result.valid()) {
-                sol::error ec = result;
-                printf("function.call() %s\n", ec.what());
-            }
-        });
-        return module;
-    }    
+    module.set_function("run", [](sol::object obj, sol::this_state L) {
+        if (obj.get_type() != sol::type::function)
+        {
+            return;
+        }
+
+        auto func = obj.as<sol::protected_function>();
+        auto result = func() if (!result.valid())
+        {
+            sol::error ec = result;
+            printf("func.call() %s\n", ec.what());
+        }
+    });
+
+    // module.set_function("go", [mainSched, &lua](sol::object obj) {
+    //     if (obj.get_type() != sol::type::function)
+    //     {
+    //         return;
+    //     }
+    //     sol::thread thread = sol::thread::create(lua);
+    //     sol::coroutine *coFunc = new sol::coroutine(thread.state(), obj);
+
+    //     go_stack(1024) co_scheduler(mainSched)[coFunc, thread]
+    //     {
+    //         sol::protected_function_result result = coFunc->call();
+    //         if (!result.valid())
+    //         {
+    //             sol::error ec = result;
+    //             printf("func.call() %s\n", ec.what());
+    //         }
+    //     };
+    // });
+
+    return module;
 }
+} // namespace lua_module_luago
 
-LUAMOD_API int luaopen_luago(lua_State* L)
+LUAMOD_API int luaopen_luago(lua_State *L)
 {
     return sol::stack::call_lua(L, 1, lua_module_luago::require_api);
 }
 
-LUAMOD_API int require_luago(lua_State* L)
+LUAMOD_API int require_luago(lua_State *L)
 {
     luaL_requiref(L, "luago", luaopen_luago, 0);
     printf("lua module: require luago\n");
