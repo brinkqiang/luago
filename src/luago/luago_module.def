@@ -1,0 +1,3 @@
+EXPORTS 
+    luaopen_luago
+    require_luago
