@@ -31,12 +31,13 @@ namespace lua_module_luago
 
         module.set_function("run", [](sol::object obj, sol::this_state L) {
             if (obj.get_type() != sol::type::function) {
-            return;
+                return;
             }
             auto function = obj.as<sol::protected_function>();
             auto result   = function.call();
             if (!result.valid()) {
                 sol::error ec = result;
+                printf("function.call() %s\n", ec.what());
             }
         });
         return module;
