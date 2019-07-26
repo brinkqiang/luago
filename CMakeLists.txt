@@ -18,7 +18,7 @@ ADD_DEFINITIONS(-DLUA_COMPAT_MODULE -DLUA_COMPAT_APIINTCASTS)
 OPTION(USE_LUA_INNER "use lua inner" ON)
 OPTION(USE_LUAGO_TEST "use luago test" ON)
 
-#ModuleImport("dmlog" "thirdparty/dmlog")
+ModuleImport("dmlibgo" "thirdparty/dmlibgo")
 
 IF (WIN32)
     INCLUDE_DIRECTORIES(${CMAKE_CURRENT_SOURCE_DIR}/src/windows)

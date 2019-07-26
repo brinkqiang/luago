@@ -36,7 +36,8 @@ static sol::table require_api(sol::this_state L)
         }
 
         auto func = obj.as<sol::protected_function>();
-        auto result = func() if (!result.valid())
+        auto result = func();
+        if (!result.valid())
         {
             sol::error ec = result;
             printf("func.call() %s\n", ec.what());
