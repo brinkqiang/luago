@@ -19,7 +19,7 @@ OPTION(USE_LUA_INNER "use lua inner" ON)
 OPTION(USE_LUAGO_TEST "use luago test" ON)
 
 ModuleImport("dmlibgo" "thirdparty/dmlibgo")
-
+ModuleInclude("libgo" "thirdparty/dmlibgo")
 IF (WIN32)
     INCLUDE_DIRECTORIES(${CMAKE_CURRENT_SOURCE_DIR}/src/windows)
 ENDIF(WIN32)
@@ -87,7 +87,7 @@ IF (WIN32)
     ENDIF(USE_LUA_INNER)
 
     ADD_LIBRARY(luago SHARED ${LUAGO_SOURCES} ${CMAKE_CURRENT_SOURCE_DIR}/src/luago/luago_module.def)
-    TARGET_LINK_LIBRARIES(luago lua53)
+    TARGET_LINK_LIBRARIES(luago lua53 libgo_static)
 
     SET_TARGET_PROPERTIES(luago PROPERTIES COMPILE_FLAGS "-DLUA_BUILD_AS_DLL -DLUA_LIB")
 
@@ -111,7 +111,7 @@ ELSEIF (APPLE)
     SET_TARGET_PROPERTIES(luago PROPERTIES COMPILE_FLAGS "-Wl,-E" )
     SET_TARGET_PROPERTIES(luago PROPERTIES PREFIX "")
 
-    TARGET_LINK_LIBRARIES(luago lua53)
+    TARGET_LINK_LIBRARIES(luago lua53 libgo_static)
 
     IF (USE_LUAGO_TEST)
         ADD_EXECUTABLE(luagotest ${LUAGOTEST_SOURCES})
@@ -131,7 +131,7 @@ ELSEIF (UNIX)
     ADD_LIBRARY(luago SHARED ${LUAGO_SOURCES})
     SET_TARGET_PROPERTIES(luago PROPERTIES COMPILE_FLAGS "-Wl,-E" )
     SET_TARGET_PROPERTIES(luago PROPERTIES PREFIX "")
-    TARGET_LINK_LIBRARIES(luago lua53)
+    TARGET_LINK_LIBRARIES(luago lua53 libgo_static)
     
     IF (USE_LUAGO_TEST)
         ADD_EXECUTABLE(luagotest ${LUAGOTEST_SOURCES})

@@ -21,6 +21,7 @@
 
 #include "luago_module.h"
 #include "sol.hpp"
+#include "coroutine.h"
 
 namespace lua_module_luago
 {
@@ -43,25 +44,27 @@ static sol::table require_api(sol::this_state L)
             printf("func.call() %s\n", ec.what());
         }
     });
+    co::Scheduler* mainSched = co::Scheduler::Create();
 
-    // module.set_function("go", [mainSched, &lua](sol::object obj) {
-    //     if (obj.get_type() != sol::type::function)
-    //     {
-    //         return;
-    //     }
-    //     sol::thread thread = sol::thread::create(lua);
-    //     sol::coroutine *coFunc = new sol::coroutine(thread.state(), obj);
+     module.set_function("go", [mainSched, &lua](sol::object obj) {
+         if (obj.get_type() != sol::type::function)
+         {
+             return;
+         }
+         sol::thread thread = sol::thread::create(lua);
 
-    //     go_stack(1024) co_scheduler(mainSched)[coFunc, thread]
-    //     {
-    //         sol::protected_function_result result = coFunc->call();
-    //         if (!result.valid())
-    //         {
-    //             sol::error ec = result;
-    //             printf("func.call() %s\n", ec.what());
-    //         }
-    //     };
-    // });
+         std::shared_ptr<sol::coroutine> coFunc(new sol::coroutine(thread.state(), obj));
+
+         go_stack(1024) co_scheduler(mainSched)[coFunc, thread]
+         {
+             sol::protected_function_result result = coFunc->call();
+             if (!result.valid())
+             {
+                 sol::error ec = result;
+                 printf("func.call() %s\n", ec.what());
+             }
+         };
+     });
 
     return module;
 }
