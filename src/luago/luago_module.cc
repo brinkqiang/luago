@@ -29,6 +29,16 @@ namespace lua_module_luago
         sol::state_view lua(L);
         sol::table module = lua.create_table();
 
+        module.set_function("run", [](sol::object obj, sol::this_state L) {
+            if (obj.get_type() != sol::type::function) {
+            return;
+            }
+            auto function = obj.as<sol::protected_function>();
+            auto result   = function.call();
+            if (!result.valid()) {
+                sol::error ec = result;
+            }
+        });
         return module;
     }    
 }
