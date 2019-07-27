@@ -28,6 +28,9 @@ namespace lua_module_luago
     static sol::table require_api(sol::this_state L)
     {
         sol::state_view lua(L);
+
+        lua.open_libraries(sol::lib::base, sol::lib::coroutine);
+
         sol::table module = lua.create_table();
 
         module.set_function("run", [](sol::object obj, sol::this_state L) {
@@ -44,28 +47,35 @@ namespace lua_module_luago
                 printf("func.call() %s\n", ec.what());
             }
         });
-        co::Scheduler *mainSched = co::Scheduler::Create();
+        co::Scheduler& mainScheduler = co::Scheduler::getInstance();
+        mainScheduler.goStart(1, 1);
+        module.set("__MAIN_SCHED", &mainScheduler);
 
-        module.set_function("go", [mainSched, &lua](sol::object obj) {
+        auto mainSched = lua.get<co::Scheduler*>("__MAIN_SCHED");
+        module.set_function("go", [mainSched](sol::object obj, sol::this_state L) {
             if (obj.get_type() != sol::type::function)
             {
                 return;
             }
-            sol::thread thread = sol::thread::create(lua);
 
-            std::shared_ptr<sol::coroutine> coFunc(new sol::coroutine(thread.state(), obj));
+            sol::thread thread = sol::thread::create(L);
+            sol::coroutine* coFunc = new sol::coroutine(thread.state(), obj);
 
-            go_stack(1024) co_scheduler(mainSched)[coFunc, thread]
-            {
+            go_stack(1024) co_scheduler(mainSched)[coFunc, thread] {
                 sol::protected_function_result result = coFunc->call();
-                if (!result.valid())
-                {
+                if (!result.valid()) {
                     sol::error ec = result;
                     printf("func.call() %s\n", ec.what());
                 }
+                delete coFunc;
             };
         });
-
+        module.set_function("yield", [](){ 
+            co_yield;
+        });
+        module.set_function("sleep", [](uint64_t t){ 
+            co_sleep(t);
+        });
         return module;
     }
 } // namespace lua_module_luago
