@@ -1,6 +1,13 @@
+
 local luago = require("luago")
 luago.run( 
     function()
-        print("hello world")
+        print("luago.run hello world")
+    end
+)
+
+luago.go( 
+    function()
+        print("luago.go hello world")
     end
 )
